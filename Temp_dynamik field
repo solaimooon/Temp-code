@@ -1,1 +1,479 @@
+document.addEventListener('DOMContentLoaded', function () {
+
+    /*
+     * تمام ردیف‌های Inline را پیدا می‌کنیم.
+     *
+     * این selector فعلاً نمونه است و بعداً باید
+     * با selector واقعی TabularInline در Unfold جایگزین شود.
+     */
+    const rows = document.querySelectorAll(
+        'SELECTOR_FOR_INLINE_ROWS'
+    );
+
+
+    /*
+     * روی تمام ردیف‌هایی که از قبل در صفحه وجود دارند
+     * حرکت می‌کنیم.
+     */
+    rows.forEach(function (row) {
+
+        /*
+         * هر ردیف را جداگانه initialize می‌کنیم.
+         */
+        initCartItemRow(row);
+
+    });
+
+});
+
+
+/*
+ * یک ردیف Inline را آماده می‌کند.
+ *
+ * وظایف:
+ * 1. پیدا کردن quantity و unit_price
+ * 2. اضافه کردن Event Listener
+ * 3. بررسی وضعیت اولیه ردیف
+ */
+function initCartItemRow(row) {
+
+    /*
+     * پیدا کردن فیلد تعداد در همین ردیف
+     */
+    const quantityInput = row.querySelector(
+        '[name$="-quantity"]'
+    );
+
+
+    /*
+     * پیدا کردن فیلد قیمت واحد در همین ردیف
+     */
+    const priceInput = row.querySelector(
+        '[name$="-unit_price"]'
+    );
+
+
+    /*
+     * اگر یکی از این دو فیلد پیدا نشد،
+     * کاری انجام نمی‌دهیم.
+     */
+    if (!quantityInput || !priceInput) {
+        return;
+    }
+
+
+    /*
+     * وقتی مقدار تعداد تغییر کرد،
+     * سطح این ردیف را دوباره محاسبه کن.
+     */
+    quantityInput.addEventListener(
+        'input',
+        function () {
+
+            updateCartItemLevel(row);
+
+        }
+    );
+
+
+    /*
+     * وقتی قیمت واحد تغییر کرد،
+     * سطح این ردیف را دوباره محاسبه کن.
+     */
+    priceInput.addEventListener(
+        'input',
+        function () {
+
+            updateCartItemLevel(row);
+
+        }
+    );
+
+
+    /*
+     * خیلی مهم:
+     *
+     * این خط باعث می‌شود اگر رکورد از قبل
+     * اطلاعات داشته باشد، همان لحظه وضعیتش
+     * بررسی شود.
+     */
+    updateCartItemLevel(row);
+}
+
+
+/*
+ * سطح یک ردیف را محاسبه می‌کند
+ * و بر اساس آن فیلدهای لازم را نمایش می‌دهد.
+ */
+function updateCartItemLevel(row) {
+
+    /*
+     * پیدا کردن تعداد
+     */
+    const quantityInput = row.querySelector(
+        '[name$="-quantity"]'
+    );
+
+
+    /*
+     * پیدا کردن قیمت واحد
+     */
+    const priceInput = row.querySelector(
+        '[name$="-unit_price"]'
+    );
+
+
+    /*
+     * اگر فیلدهای اصلی وجود ندارند،
+     * از تابع خارج شو.
+     */
+    if (!quantityInput || !priceInput) {
+        return;
+    }
+
+
+    /*
+     * تبدیل مقدار تعداد از String به Number
+     *
+     * اگر خالی یا نامعتبر بود، صفر در نظر می‌گیریم.
+     */
+    const quantity =
+        parseInt(quantityInput.value) || 0;
+
+
+    /*
+     * تبدیل قیمت واحد به Number
+     */
+    const unitPrice =
+        parseInt(priceInput.value) || 0;
+
+
+    /*
+     * محاسبه قیمت کل
+     */
+    const total = quantity * unitPrice;
+
+
+    /*
+     * پیدا کردن فیلدهای اضافی
+     */
+    const description = row.querySelector(
+        '[name$="-description"]'
+    );
+
+    const fieldA = row.querySelector(
+        '[name$="-field_a"]'
+    );
+
+    const fieldB = row.querySelector(
+        '[name$="-field_b"]'
+    );
+
+
+    /*
+     * ابتدا همه فیلدهای اضافی را مخفی می‌کنیم.
+     *
+     * بعد بر اساس سطح، فقط موارد لازم
+     * را نمایش می‌دهیم.
+     */
+    hideField(description);
+    hideField(fieldA);
+    hideField(fieldB);
+
+
+    /*
+     * سطح ۲
+     *
+     * اگر مجموع بین یک میلیون و سه میلیون باشد.
+     */
+    if (
+        total >= 1000000 &&
+        total < 3000000
+    ) {
+
+        showField(fieldA);
+
+    }
+
+
+    /*
+     * سطح ۳
+     *
+     * اگر مجموع حداقل سه میلیون باشد.
+     */
+    else if (total >= 3000000) {
+
+        showField(fieldA);
+        showField(fieldB);
+        showField(description);
+
+    }
+}
+
+
+/*
+ * نمایش یک فیلد
+ */
+function showField(field) {
+
+    /*
+     * اگر فیلد وجود نداشت،
+     * کاری انجام نده.
+     */
+    if (!field) {
+        return;
+    }
+
+
+    /*
+     * از input/textarea به والد مربوط به
+     * کل فیلد می‌رویم تا label هم همراه آن
+     * نمایش داده شود.
+     */
+    const container = field.closest(
+        '.form-row, .fieldBox'
+    );
+
+
+    /*
+     * نمایش Container
+     */
+    if (container) {
+        container.style.display = '';
+    }
+}
+
+
+/*
+ * مخفی کردن یک فیلد
+ */
+function hideField(field) {
+
+    /*
+     * اگر فیلد وجود نداشت،
+     * کاری انجام نده.
+     */
+    if (!field) {
+        return;
+    }
+
+
+    /*
+     * پیدا کردن Container مربوط به فیلد
+     */
+    const container = field.closest(
+        '.form-row, .fieldBox'
+    );
+
+
+    /*
+     * مخفی کردن Container
+     */
+    if (container) {
+        container.style.display = 'none';
+    }
+}
+
+
+
+سناریو دوم 
+
+
+
+django.jQuery(document).on(
+    'formset:added',
+    function (event, row) {
+
+        /*
+         * Django خودش ردیف جدید را
+         * داخل متغیر row به ما داده است.
+         *
+         * بنابراین دیگر لازم نیست با
+         * querySelector دنبال آن بگردیم.
+         */
+        initCartItemRow(row);
+
+    }
+);
+
+
+/*
+ * یک ردیف Inline را آماده می‌کند.
+ */
+function initCartItemRow(row) {
+
+    /*
+     * پیدا کردن تعداد
+     */
+    const quantityInput = row.querySelector(
+        '[name$="-quantity"]'
+    );
+
+
+    /*
+     * پیدا کردن قیمت واحد
+     */
+    const priceInput = row.querySelector(
+        '[name$="-unit_price"]'
+    );
+
+
+    /*
+     * اگر پیدا نشدند، خارج شو.
+     */
+    if (!quantityInput || !priceInput) {
+        return;
+    }
+
+
+    /*
+     * گوش دادن به تغییر تعداد
+     */
+    quantityInput.addEventListener(
+        'input',
+        function () {
+
+            updateCartItemLevel(row);
+
+        }
+    );
+
+
+    /*
+     * گوش دادن به تغییر قیمت
+     */
+    priceInput.addEventListener(
+        'input',
+        function () {
+
+            updateCartItemLevel(row);
+
+        }
+    );
+
+
+    /*
+     * بررسی وضعیت اولیه همین ردیف
+     */
+    updateCartItemLevel(row);
+}
+
+
+/*
+ * محاسبه سطح ردیف
+ */
+function updateCartItemLevel(row) {
+
+    const quantityInput = row.querySelector(
+        '[name$="-quantity"]'
+    );
+
+    const priceInput = row.querySelector(
+        '[name$="-unit_price"]'
+    );
+
+
+    if (!quantityInput || !priceInput) {
+        return;
+    }
+
+
+    const quantity =
+        parseInt(quantityInput.value) || 0;
+
+
+    const unitPrice =
+        parseInt(priceInput.value) || 0;
+
+
+    const total = quantity * unitPrice;
+
+
+    const description = row.querySelector(
+        '[name$="-description"]'
+    );
+
+    const fieldA = row.querySelector(
+        '[name$="-field_a"]'
+    );
+
+    const fieldB = row.querySelector(
+        '[name$="-field_b"]'
+    );
+
+
+    /*
+     * ابتدا همه مخفی
+     */
+    hideField(description);
+    hideField(fieldA);
+    hideField(fieldB);
+
+
+    /*
+     * سطح ۲
+     */
+    if (
+        total >= 1000000 &&
+        total < 3000000
+    ) {
+
+        showField(fieldA);
+
+    }
+
+
+    /*
+     * سطح ۳
+     */
+    else if (total >= 3000000) {
+
+        showField(fieldA);
+        showField(fieldB);
+        showField(description);
+
+    }
+}
+
+
+/*
+ * نمایش فیلد
+ */
+function showField(field) {
+
+    if (!field) {
+        return;
+    }
+
+
+    const container = field.closest(
+        '.form-row, .fieldBox'
+    );
+
+
+    if (container) {
+        container.style.display = '';
+    }
+}
+
+
+/*
+ * مخفی کردن فیلد
+ */
+function hideField(field) {
+
+    if (!field) {
+        return;
+    }
+
+
+    const container = field.closest(
+        '.form-row, .fieldBox'
+    );
+
+
+    if (container) {
+        container.style.display = 'none';
+    }
+}
 
